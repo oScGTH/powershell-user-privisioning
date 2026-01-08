@@ -12,31 +12,46 @@ function Import-UPUserData {
     # Makes sure a path is given.
     param (
         [Parameter(Mandatory)]
-        [string]$Path
+        [string]$Path,
+
+        [string]$LogPath = "..\logs\provisioning.log"
     )
+
+    write-UPLog -Message "Starting user data import from $Path" -LogPath $LogPath
     
-    # If statement giving error if path isn't found.
-    if (-not (Test-Path $Path)) {
-        throw "Input file not found: $Path"
-    }
+    try {
+        # If statement giving error if path isn't found.
+        if (-not (Test-Path $Path)) {
+            throw "Input file not found: $Path"
+        }
 
-    # Gets the filetype.
-    $extension = [IO.path]::GetExtension($Path).ToLower()
+        # Gets the filetype.
+        $extension = [IO.path]::GetExtension($Path).ToLower()
 
-    # Compares filetype expression with multiple conditions.
-    switch ($extension) {
-        ".csv" {
-            return Import-Csv -Path $Path
+        # Compares filetype expression with multiple conditions.
+        switch ($extension) {
+            ".csv" {
+                $data = Import-Csv -Path $Path
+            }
+            ".json" {
+                $data = Get-Content -Path $Path -Raw | ConvertFrom-Json
+            }
+            default {
+                throw "Unsupported input format: $extension"
+            }
         }
-        ".json" {
-            return Get-Content -Path $Path -Raw | ConvertFrom-Json
-        }
-        default {
-            throw "Unsupported input format: $extension"
-        }
+
+        $count = @($data).Count
+        write-UPLog -Message "Successfully imported $count user record(s)." -LogPath $LogPath
+
+        return $data
     }
+    catch {
+        write-UPLog -Message "Failed to import user data: $_" -Level ERROR -LogPath $LogPath
+        throw
+    }
+    
 }
-
 
 # Logging function.
 function Write-UPLog {
