@@ -9,3 +9,8 @@
 - Initial module structure.
 - CSV and JSON input support.
 - Centralized logging function.
+
+## v0.2.0
+- Added strict input validation for user objects.
+- Invalid users are filtered and logged with WARN severity.
+- Ensured compatibility with PowerShell StrictMode.

@@ -14,3 +14,11 @@ The function performs the following steps:
 
 All import operations are wrapped in structured error handling. Any failure during the import process
 is logged with severity `ERROR` and re-thrown to ensure upstream functions can handle rollback or termination.
+
+## Workflow
+1. Import user data from CSV or JSON
+2. Validate required user attributes
+3. Filter invalid user records
+4. Proceed with provisioning logic (next step)
+
+Import-UPUserData → Test-UPUserData → Provisioning
