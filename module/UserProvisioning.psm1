@@ -53,6 +53,59 @@ function Import-UPUserData {
     
 }
 
+# Validating information about users.
+function Test-UPUserData {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory)]
+        [object[]]$Users,
+
+        [string[]]$RequiredFields = @(
+            "FirstName",
+            "LastName",
+            "Username",
+            "Department",
+            "Role"
+        ),
+
+        [string]$LogPath = "..\logs\provisioning.log"
+
+    )
+
+    $validUsers = @()
+
+    foreach ($user in $Users) {
+        $missingFields = @()
+
+        foreach ($field in $RequiredFields) {
+            if (-not ($user.PSObject.Properties.Name -contains $field)) {
+                    $missingFields += $field
+                    continue
+            }
+
+            $value = $user.PSObject.Properties[$field].value
+
+            if ([string]::IsNullOrWhiteSpace($value)) {
+                $missingFields += $field
+            }
+        }
+
+        if ($missingFields.Count -gt 0) {
+            $username = $user.PSObject.Properties["Username"].Value
+            Write-UPLog `
+                -Message "User '$username' is missing required field(s): $($missingFields -join ', ')" `
+                -Level WARN `
+                -LogPath $LogPath
+            continue
+        }
+
+        $validUsers += $user
+    } 
+
+    Write-UPLog -Message "Validation complete: $($validUsers.Count) valid user(s)" -LogPath $LogPath
+    return $validUsers
+}
+
 # Logging function.
 function Write-UPLog {
     [CmdletBinding()]
@@ -89,4 +142,4 @@ function Write-UPLog {
 }
 
 # Defines the modules public API.
-Export-ModuleMember -Function Import-UPUserData, Write-UPLog
+Export-ModuleMember -Function Import-UPUserData, Write-UPLog, Test-UPUserData
