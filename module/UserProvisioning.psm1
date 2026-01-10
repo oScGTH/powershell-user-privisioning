@@ -180,8 +180,8 @@ function Set-UPUserGroups {
     
     Import-Module ActiveDirectory -ErrorAction Stop
 
-    $username = $User.PSObject.Properties["Username"].Value
-    $role     = $User.PSObject.Properties["Role"].Value
+    $username = $Users.PSObject.Properties["Username"].Value
+    $role     = $Users.PSObject.Properties["Role"].Value
 
     # Role -> Group mapping
     $roleGroupMap = @{
