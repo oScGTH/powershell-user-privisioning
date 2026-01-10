@@ -131,6 +131,44 @@ function Invoke-UPProvisioning {
     Write-UPLog -Message "Provisioning simulation complete for $($Users.Count) user(s)" -LogPath $LogPath
 }
 
+function New-UPUser {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory)]
+        [object]$Users,
+
+        [string]$DomainDN = "DC=lab,DC=local",
+
+        [string]$LogPath = "..\logs\provisioning.log"
+    )
+
+    Import-Module ActiveDirectory -ErrorAction Stop
+
+    $firstName  = $Users.PSObject.Properties["FirstName"].value
+    $lastName   = $Users.PSObject.Properties["LastName"].value
+    $username   = $Users.PSObject.Properties["Username"].value
+    $department = $Users.PSObject.Properties["Department"].value
+    
+    $ouPath = "OU=$department,OU=Users,$DomainDN"
+
+    if ($PSCmdlet.ShouldProcess($username, "Create AD user")) {
+        Write-UPLog `
+            -Message "Creating AD user '$username' in '$ouPath'" `
+            -LogPath $LogPath
+        
+        New-UPUser `
+            -Name "$firstName $lastName" `
+            -GivenName $firstName `
+            -Surname $lastName `
+            -SamAccountName $username `
+            -UserPrincipalName "username@$($DomainDN -replace 'DC=', '' -replace ',', '.')" `
+            -Path $ouPath `
+            -AccountPassword (ConvertTo-SecureString "TempP@ss123!" -AsPlainText -Force) `
+            -Enabled $true `
+            ChangePasswordAtLogon $true
+    }
+}
+
 # Logging function.
 function Write-UPLog {
     [CmdletBinding()]
@@ -167,4 +205,9 @@ function Write-UPLog {
 }
 
 # Defines the modules public API.
-Export-ModuleMember -Function Import-UPUserData, Write-UPLog, Test-UPUserData, Invoke-UPProvisioning
+Export-ModuleMember -Function `
+    Import-UPUserData, `
+    Write-UPLog, `
+    Test-UPUserData, `
+    Invoke-UPProvisioning, `
+    New-UPUser
