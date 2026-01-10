@@ -37,3 +37,22 @@ the provisioning pipeline.
 
 This design ensures robust handling of partial or malformed input data without
 terminating the entire execution.
+
+## Provisioning Stub (Simulation Phase)
+
+The `Invoke-UPProvisioning` function represents a controlled provisioning stub.
+At this stage, no changes are made to Active Directory or any external system.
+
+The function iterates over validated user objects and describes what actions
+*would* be performed during provisioning. Allowing for safe testing of the full
+pipeline before enabling real user creation.
+
+Key characteristics:
+- Accepts only validated user objects.
+- Uses PowerShell `SupportsShouldProcess` to enable `-WhatIf` and `-Confirm`.
+- Performs no side effects.
+- Logs provisioning intent in a consistent and traceable manner.
+
+When executed with `-WhatIf`, PowerShell prevents the execution of provisioning
+logic and outputs a simulation message to the console. No log entries are written
+in this mode by design.

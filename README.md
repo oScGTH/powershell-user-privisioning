@@ -16,9 +16,9 @@ All import operations are wrapped in structured error handling. Any failure duri
 is logged with severity `ERROR` and re-thrown to ensure upstream functions can handle rollback or termination.
 
 ## Workflow
-1. Import user data from CSV or JSON
-2. Validate required user attributes
-3. Filter invalid user records
-4. Proceed with provisioning logic (next step)
+1. Import user data from CSV or JSON (`Import-UPUserData`)
+2. Validate required user attributes (`Test-UPUserData`)
+3. Simulate provisioning actions (`Invoke-UPProvisioning`)
+4. Enable real provisioning in later stages
 
-Import-UPUserData → Test-UPUserData → Provisioning
+Import-UPUserData → Test-UPUserData → Invoke-UPProvisioning

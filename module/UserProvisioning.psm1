@@ -106,6 +106,31 @@ function Test-UPUserData {
     return $validUsers
 }
 
+function Invoke-UPProvisioning {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory)]
+        [object[]]$Users,
+
+        [string]$LogPath = "..\logs\provisioning.log"
+    )
+
+    foreach ($user in $Users) {
+
+        $username   = $user.PSObject.Properties["Username"].Value
+        $department = $user.PSObject.Properties["Department"].Value
+        $role       = $user.PSObject.Properties["Role"].Value
+
+        if ($PSCmdlet.ShouldProcess($username, "Provision user")) {
+            Write-UPLog `
+                -Message "Would provision user '$username' (Department: $department, Role: $role)"`
+                -LogPath $LogPath
+        }
+    }
+
+    Write-UPLog -Message "Provisioning simulation complete for $($Users.Count) user(s)" -LogPath $LogPath
+}
+
 # Logging function.
 function Write-UPLog {
     [CmdletBinding()]
@@ -142,4 +167,4 @@ function Write-UPLog {
 }
 
 # Defines the modules public API.
-Export-ModuleMember -Function Import-UPUserData, Write-UPLog, Test-UPUserData
+Export-ModuleMember -Function Import-UPUserData, Write-UPLog, Test-UPUserData, Invoke-UPProvisioning
