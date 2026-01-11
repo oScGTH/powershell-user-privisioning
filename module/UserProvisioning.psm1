@@ -210,6 +210,64 @@ function Set-UPUserGroups {
     }
 }
 
+function Invoke-UPBulkProvisioning {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory)]
+        [object[]]$Users,
+
+        [string]$LogPath = "..\logs\provisioning.log"
+    )
+    
+    $results = @()
+
+    foreach ($user in $Users) {
+        $username = $user.PSObject.Properties["Username"].value
+
+        Write-UPLog `
+            -Message "Starting provisioning transaction for user '$username'" `
+            -LogPath $LogPath
+
+        $userResult = [PSCustomObject]@{
+            Username         = $username
+            ActionsCompleted = @()
+            Status           = "Started"
+        }
+
+        try {
+            if ($PSCmdlet.ShouldProcess($username, "Create AD user")) {
+                New-UPUser -User $user
+                $userresult.ActionsCompleted += "UserCreated"
+            }
+
+            if ($PSCmdlet.ShouldProcess($username, "Assign AD groups")) {
+                Set-UPUserGroups -User $user
+                $userResult.ActionsCompleted += "GroupsAssigned"
+            }
+
+            $userResult.Status = "Success"
+
+            Write-UPLog `
+                -Message "Provisioning completed successfully for user '$username'" `
+                -LogPath $LogPath
+        }
+        catch {
+            $userResult.Status = "Failed"
+
+            Write-UPLog `
+                -Message "Provisioning failed for user '$username': $_" `
+                -Level ERROR `
+                -LogPath $LogPath
+        }
+
+        $results += $userResult
+    }
+
+    return $results
+}
+
+
+
 # Logging function.
 function Write-UPLog {
     [CmdletBinding()]
@@ -252,4 +310,5 @@ Export-ModuleMember -Function `
     Test-UPUserData, `
     Invoke-UPProvisioning, `
     New-UPUser, `
-    Set-UPUserGroups
+    Set-UPUserGroups, `
+    Invoke-UPBulkProvisioning
